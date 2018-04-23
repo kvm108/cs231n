@@ -22,13 +22,14 @@ def affine_forward(x, w, b):
     """
     out = None
     
-    print("\n Before x shape {} ".format(x.shape))
+#     print("\n Before x shape {} ".format(x.shape))
     
-    print("\n w shape {} ".format(w.shape))
-    print("\n b shape {} ".format(b.shape))
+#     print("\n w shape {} ".format(w.shape))
+#     print("\n b shape {} ".format(b.shape))
     
-    print("\n After x shape {} ".format(x.reshape(x.shape[0], -1).shape))
-    print("\n ================ EOFP \n")
+#     print("\n After x shape {} ".format(x.reshape(x.shape[0], -1).shape))
+#     print("\n ================ EOFP \n")
+
     ###########################################################################
     # TODO: Implement the affine forward pass. Store the result in out. You   #
     # will need to reshape the input into rows.                               #
@@ -63,16 +64,23 @@ def affine_backward(dout, cache):
     dx, dw, db = None, None, None
     
     
-    print("\n w shape {} ".format(w.shape))
-    print("\n b shape {} ".format(b.shape))
+#     print("\n w shape {} ".format(w.shape))
+#     print("\n b shape {} ".format(b.shape))
     
-    print("\n x shape {} ".format(x.shape))
-    print("\n dout shape {} ".format(dout.shape))
+#     print("\n x shape {} ".format(x.shape))
+#     print("\n dout shape {} ".format(dout.shape))
     
     ###########################################################################
     # TODO: Implement the affine backward pass.                               #
     ###########################################################################
-    pass
+    
+    #normal bp (dout ~ dscore)
+    dx = dout.dot(w.T).reshape(x.shape)
+    dw = (x.reshape(x.shape[0], -1)).T.dot(dout)
+    db = np.sum(dout, axis = 0)
+    
+   
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -94,7 +102,7 @@ def relu_forward(x):
     ###########################################################################
     # TODO: Implement the ReLU forward pass.                                  #
     ###########################################################################
-    pass
+    out = np.maximum(0, x)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -117,7 +125,10 @@ def relu_backward(dout, cache):
     ###########################################################################
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
-    pass
+#     TODO: What is actually contined in cache?
+#     Values < 0 ignored
+    dx = dout
+    dx[cache < 0] = 0
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -720,7 +731,7 @@ def svm_loss(x, y):
     num_pos = np.sum(margins > 0, axis=1)
     dx = np.zeros_like(x)
     dx[margins > 0] = 1
-    dx[np.arange(N), y] -= num_pos
+    dx[np.arange(N), y] -= num_pos #why this?
     dx /= N
     return loss, dx
 
