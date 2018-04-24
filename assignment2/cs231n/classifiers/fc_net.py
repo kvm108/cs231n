@@ -191,6 +191,7 @@ class FullyConnectedNet(object):
         self.dtype = dtype
         self.params = {}
 
+#         print('Hidden dims\n', hidden_dims, 'type \n', type(hidden_dims), 'input dims\n', input_dim)
         ############################################################################
         # TODO: Initialize the parameters of the network, storing all values in    #
         # the self.params dictionary. Store weights and biases for the first layer #
@@ -203,7 +204,17 @@ class FullyConnectedNet(object):
         # beta2, etc. Scale parameters should be initialized to ones and shift     #
         # parameters should be initialized to zeros.                               #
         ############################################################################
-        pass
+        
+        all_dims = np.hstack((input_dim, hidden_dims, num_classes))
+        
+        for i in range(self.num_layers):
+            self.params['b{}'.format(i+1)] = np.zeros(all_dims[i+1])
+            self.params['w{}'.format(i+1)] = np.random.rand(all_dims[i], all_dims[i+1])
+            
+        #dump
+#         for i in range(self.num_layers):
+#             print('\n',i, self.params['b{}'.format(i+1)].shape)
+#             print('\n',i, self.params['w{}'.format(i+1)].shape)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
