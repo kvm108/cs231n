@@ -273,7 +273,30 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        pass
+        
+        cache = {}
+        
+        out_forward = X
+        for index in range(self.num_layers-1):
+            # For the weights and biases
+            index_str = str(index + 1)
+            
+            # Affine layer
+            out_forward, cache['affine_'+index_str] = affine_forward(out_forward, self.params['W'+index_str], self.params['b'+index_str])
+            
+            # ReLU layer
+            out_forward, cache['relu_'+index_str] = relu_forward(out_forward)
+            
+            L2reg += np.sum(self.params['W%d' % (i + 1)] ** 2)
+            
+        
+        # Last affine layer
+        index_str = str(self.num_layers)
+        out_forward, cache['affine_'+index_str] = affine_forward(out_forward, self.params['W'+index_str], self.params['b'+index_str])
+        scores = out_forward
+        
+        L2reg += np.sum(self.params['W%d' % (i + 1)] ** 2)
+        L2reg *= 0.5 * self.reg
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -283,6 +306,9 @@ class FullyConnectedNet(object):
             return scores
 
         loss, grads = 0.0, {}
+        
+        loss, dout = softmax_loss(scores, y)
+        loss += L2reg
         ############################################################################
         # TODO: Implement the backward pass for the fully-connected net. Store the #
         # loss in the loss variable and gradients in the grads dictionary. Compute #
