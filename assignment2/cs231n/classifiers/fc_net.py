@@ -191,7 +191,7 @@ class FullyConnectedNet(object):
         self.dtype = dtype
         self.params = {}
 
-#         print('Hidden dims\n', hidden_dims, 'type \n', type(hidden_dims), 'input dims\n', input_dim)
+#         print('Hidden dims\n', hidden_dims, 'typek \n', type(hidden_dims), 'input dims\n', input_dim)
         ############################################################################
         # TODO: Initialize the parameters of the network, storing all values in    #
         # the self.params dictionary. Store weights and biases for the first layer #
@@ -209,7 +209,7 @@ class FullyConnectedNet(object):
         
         for i in range(self.num_layers):
             self.params['b{}'.format(i+1)] = np.zeros(all_dims[i+1])
-            self.params['w{}'.format(i+1)] = np.random.rand(all_dims[i], all_dims[i+1])
+            self.params['w{}'.format(i+1)] = weight_scale * np.random.rand(all_dims[i], all_dims[i+1])
             
         #dump
 #         for i in range(self.num_layers):
@@ -274,29 +274,29 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         
-        cache = {}
+        
+        caches = {}
+        reg_loss = 0
+        w = 0
         
         out_forward = X
         for index in range(self.num_layers-1):
-            # For the weights and biases
-            index_str = str(index + 1)
-            
-            # Affine layer
-            out_forward, cache['affine_'+index_str] = affine_forward(out_forward, self.params['W'+index_str], self.params['b'+index_str])
-            
-            # ReLU layer
-            out_forward, cache['relu_'+index_str] = relu_forward(out_forward)
-            
-            L2reg += np.sum(self.params['W%d' % (i + 1)] ** 2)
-            
+            index_str = str(index+1)            
+            out_forward, caches[index_str] = affine_relu_forward(out_forward, self.params['w'+index_str], self.params['b'+index_str])
+            reg_loss += np.sum(self.params['w'+format(index_str)] ** 2)
         
         # Last affine layer
+#         print("jkkjdfkj", index, index_str, self.num_layers)
         index_str = str(self.num_layers)
-        out_forward, cache['affine_'+index_str] = affine_forward(out_forward, self.params['W'+index_str], self.params['b'+index_str])
+        out_forward, caches[index_str] = affine_forward(out_forward, self.params['w'+index_str], self.params['b'+index_str])
         scores = out_forward
         
-        L2reg += np.sum(self.params['W%d' % (i + 1)] ** 2)
-        L2reg *= 0.5 * self.reg
+        reg_loss += np.sum(self.params['w'+index_str] ** 2)
+        reg_loss *= 0.5 * self.reg
+        
+#         print('\Caches \n ', len(caches))
+#         print('\nscore ', scores, 'out \n', out_forward)
+        
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -306,9 +306,7 @@ class FullyConnectedNet(object):
             return scores
 
         loss, grads = 0.0, {}
-        
-        loss, dout = softmax_loss(scores, y)
-        loss += L2reg
+       
         ############################################################################
         # TODO: Implement the backward pass for the fully-connected net. Store the #
         # loss in the loss variable and gradients in the grads dictionary. Compute #
@@ -322,7 +320,29 @@ class FullyConnectedNet(object):
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
-        pass
+        data_loss, dscores = softmax_loss(scores, y)
+        loss = data_loss + reg_loss
+       
+        #BACKPROP
+        
+        cache = caches[index_str]
+        dA, dW, db = affine_backward(dscores, cache)
+        
+        grads['w'+index_str] = dW + self.params['w'+index_str] * self.reg 
+        grads['b'+index_str] = db + self.params['b'+index_str] * self.reg
+        
+#         print('grad last ',grads['w'+index_str], grads['b'+index_str])
+        
+        for idx in reversed(range(self.num_layers-1)):
+            index_str = str(idx+1)
+            print('ind ', index_str)
+            
+            dA, dW, db = affine_relu_backward(dA, caches[index_str])
+            
+            grads['w'+index_str] = dW + self.params['w'+index_str] * self.reg
+            grads['b'+index_str] = db + self.params['b'+index_str] * self.reg
+        
+        
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
