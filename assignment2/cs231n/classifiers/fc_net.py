@@ -273,23 +273,25 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        
-        
+           
         caches = {}
         reg_loss = 0
         w = 0
+        layer = {}
         
-        out_forward = X
-        for index in range(self.num_layers-1):
-            index_str = str(index+1)            
-            out_forward, caches[index_str] = affine_relu_forward(out_forward, self.params['w'+index_str], self.params['b'+index_str])
+        layer[str(0)] = X
+        for index in range(1, self.num_layers):
+            
+            index_str = str(index)            
+#             print('ind ', index_str)
+            layer[index_str], caches[index_str] = affine_relu_forward(layer[str(index-1)], self.params['w'+index_str], self.params['b'+index_str])
             reg_loss += np.sum(self.params['w'+format(index_str)] ** 2)
         
         # Last affine layer
-#         print("jkkjdfkj", index, index_str, self.num_layers)
+#         print("Last", index, index_str, self.num_layers)
         index_str = str(self.num_layers)
-        out_forward, caches[index_str] = affine_forward(out_forward, self.params['w'+index_str], self.params['b'+index_str])
-        scores = out_forward
+        scores, caches[index_str] = affine_forward(layer[str(self.num_layers-1)], self.params['w'+index_str], self.params['b'+index_str])
+        
         
         reg_loss += np.sum(self.params['w'+index_str] ** 2)
         reg_loss *= 0.5 * self.reg
@@ -324,23 +326,24 @@ class FullyConnectedNet(object):
         loss = data_loss + reg_loss
        
         #BACKPROP
+        dx = {}
         
         cache = caches[index_str]
-        dA, dW, db = affine_backward(dscores, cache)
+        dx[index_str], grads['w'+index_str], grads['b'+index_str] = affine_backward(dscores, cache)
         
-        grads['w'+index_str] = dW + self.params['w'+index_str] * self.reg 
-        grads['b'+index_str] = db + self.params['b'+index_str] * self.reg
+        grads['w'+index_str] += self.params['w'+index_str] * self.reg 
+        grads['b'+index_str] += self.params['b'+index_str] * self.reg
         
 #         print('grad last ',grads['w'+index_str], grads['b'+index_str])
         
-        for idx in reversed(range(self.num_layers-1)):
-            index_str = str(idx+1)
-            print('ind ', index_str)
+        for idx in reversed(range(1, self.num_layers)):
+            index_str = str(idx)
+#             print('ind ', index_str)
             
-            dA, dW, db = affine_relu_backward(dA, caches[index_str])
+            dx[index_str], grads['w'+index_str], grads['b'+index_str] = affine_relu_backward(dx[str(idx+1)], caches[index_str])
             
-            grads['w'+index_str] = dW + self.params['w'+index_str] * self.reg
-            grads['b'+index_str] = db + self.params['b'+index_str] * self.reg
+            grads['w'+index_str] += self.params['w'+index_str] * self.reg
+            grads['b'+index_str] += self.params['b'+index_str] * self.reg
         
         
         ############################################################################
